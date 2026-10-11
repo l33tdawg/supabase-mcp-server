@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
+## [Fork 0.4] - 2026-10-11
+Fork of [alexander-zuev/supabase-mcp-server](https://github.com/alexander-zuev/supabase-mcp-server) (Apache-2.0).
+
+### Fixed
+- **Fail open when the licence service is unreachable.** Upstream calls `api.thequery.dev` on every tool
+  invocation; that domain no longer resolves, so every tool call failed with *"We couldn't verify access
+  to '<tool>' at the moment"*. Access is now granted with a warning when the service cannot be reached;
+  an explicit denial from a reachable service is still honoured. (`supabase_mcp/core/feature_manager.py`)
+- **Pin `mcp[cli]>=1.4.1,<2`.** Upstream's unbounded constraint resolved to `mcp` 2.x, where
+  `mcp.server.fastmcp` was removed, breaking the server at import on a fresh install.
+
+
 ## [0.3.12] - 2025-03-12
 ### Added
 - Implemented a new `retrieve_logs` tool that allows retrieval of logs from any Supabase log collection - Postgres, PostgREST, Auth, Edge Functions and others. Provides a way to query and filter

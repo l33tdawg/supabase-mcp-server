@@ -1,5 +1,22 @@
 # Query | MCP server for Supabase
 
+> [!IMPORTANT]
+> **Community fork — [l33tdawg/supabase-mcp-server](https://github.com/l33tdawg/supabase-mcp-server).**
+> Upstream ([alexander-zuev/supabase-mcp-server](https://github.com/alexander-zuev/supabase-mcp-server))
+> is no longer maintained, and the licence service it calls on **every tool invocation**
+> (`api.thequery.dev`) **no longer resolves**. A stock install therefore fails every tool call with
+> *"We couldn't verify access to '<tool>' at the moment…"*.
+>
+> This fork keeps the server working:
+> - **Fail open** — if the licence service can't be reached, access is granted and a warning is logged
+>   instead of blocking the tool. An explicit *denial* from a reachable service is still honoured.
+> - **`mcp<2` pin** — upstream declares `mcp[cli]>=1.4.1` with no upper bound, so a fresh install pulls
+>   `mcp` 2.x (where `mcp.server.fastmcp` was removed) and the server won't even import. This fork bounds it.
+>
+> Everything else is unchanged. Apache-2.0; original copyright and attribution retained.
+>
+> *If you want a maintained server, Supabase also publish an [official one](https://github.com/supabase-community/supabase-mcp).*
+
 > 🌅 More than 17k installs via pypi and close to 30k downloads on Smithery.ai — in short, this was fun! 🥳
 > Thanks to everyone who has been using this server for the past few months, and I hope it was useful for you.
 > Since Supabase has released their own [official MCP server](https://github.com/supabase-community/supabase-mcp),

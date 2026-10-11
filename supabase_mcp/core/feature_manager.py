@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Literal
 
 from supabase_mcp.clients.api_client import ApiClient
-from supabase_mcp.exceptions import APIError, ConfirmationRequiredError, FeatureAccessError, FeatureTemporaryError
+from supabase_mcp.exceptions import ConfirmationRequiredError, FeatureAccessError
 from supabase_mcp.logger import logger
 from supabase_mcp.services.database.postgres_client import QueryResult
 from supabase_mcp.services.safety.models import ClientType, SafetyMode
@@ -25,11 +25,17 @@ class FeatureManager:
     async def check_feature_access(self, feature_name: str) -> None:
         """Check if the user has access to a feature.
 
+        Fork change - fail open: if the licence service cannot be reached, access
+        is granted rather than blocking the tool. The upstream service at
+        api.thequery.dev is no longer reachable, which previously caused every
+        tool call to fail. An explicit denial from a *reachable* service is still
+        honoured.
+
         Args:
             feature_name: Name of the feature to check
 
         Raises:
-            FeatureAccessError: If the user doesn't have access to the feature
+            FeatureAccessError: If a reachable service denies access to the feature
         """
         try:
             # Use the API client to check feature access
@@ -42,14 +48,15 @@ class FeatureManager:
 
             logger.debug(f"Feature access granted: {feature_name}")
 
-        except APIError as e:
-            logger.error(f"API error checking feature access: {feature_name} - {e}")
-            raise FeatureTemporaryError(feature_name, e.status_code, e.response_body) from e
-        except Exception as e:
-            if not isinstance(e, FeatureAccessError):
-                logger.error(f"Unexpected error checking feature access: {feature_name} - {e}")
-                raise FeatureTemporaryError(feature_name) from e
+        except FeatureAccessError:
+            # A reachable licence service explicitly denied access: honour it.
             raise
+        except Exception as e:
+            # Licence service unreachable or erroring: grant access instead of
+            # blocking, so a dead or firewalled service cannot brick the server.
+            logger.warning(
+                f"Licence service unreachable while checking '{feature_name}' ({e}); granting access (fail-open)",
+            )
 
     async def execute_tool(self, tool_name: ToolName, services_container: "ServicesContainer", **kwargs: Any) -> Any:
         """Execute a tool with feature access check.
